@@ -1,9 +1,20 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:netflix_clone/screens/movies_main_screen.dart';
 import 'package:netflix_clone/screens/netflix_profile_create_screen.dart';
 
-class AccountSelectionPage extends StatelessWidget {
+import '../api/constants.dart';
+import '../api/tmdb_api.dart';
+import '../models/movielist_model.dart';
+
+class AccountSelectionPage extends StatefulWidget {
   const AccountSelectionPage({super.key});
+
+  @override
+  State<AccountSelectionPage> createState() => _AccountSelectionPageState();
+}
+
+class _AccountSelectionPageState extends State<AccountSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +57,8 @@ class AccountSelectionPage extends StatelessWidget {
                         Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const MovieListScreen()));
+                                builder: (context) => MovieListScreen(
+                                    )));
                       },
                     ),
                     const SizedBox(height: 5),

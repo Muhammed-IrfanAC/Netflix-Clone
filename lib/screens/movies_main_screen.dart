@@ -1,7 +1,46 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:netflix_clone/models/movielist_model.dart';
+import 'package:netflix_clone/screens/details_page.dart';
+import 'package:netflix_clone/widgets/main_thumbnail.dart';
+import 'package:netflix_clone/widgets/skeleton_loading.dart';
+import 'package:netflix_clone/widgets/thumbnail.dart';
 
-class MovieListScreen extends StatelessWidget {
+import '../api/constants.dart';
+import '../api/tmdb_api.dart';
+
+class MovieListScreen extends StatefulWidget {
   const MovieListScreen({super.key});
+
+  @override
+  State<MovieListScreen> createState() => _MovieListScreenState();
+}
+
+class _MovieListScreenState extends State<MovieListScreen> {
+  List<MovieListModel> popularMovies = [];
+  List<MovieListModel> trendingMovies = [];
+  List<MovieListModel> upcomingMovies = [];
+  List<MovieListModel> nowPlayingMovies = [];
+  bool _isMovieLoaded = false;
+  late int randomIndex;
+
+  loadmovies() async {
+    popularMovies = await TmdbApi().fetchMovies(Constants.popularMovies);
+    trendingMovies = await TmdbApi().fetchMovies(Constants.trendingMovies);
+    upcomingMovies = await TmdbApi().fetchMovies(Constants.upcomingMovies);
+    nowPlayingMovies = await TmdbApi().fetchMovies(Constants.nowPlayingMovies);
+    Random random = Random();
+    randomIndex = random.nextInt(nowPlayingMovies.length);
+    setState(() {
+      _isMovieLoaded = true;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadmovies();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -9,14 +48,15 @@ class MovieListScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            SizedBox(height: 50),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.04),
             Row(
               children: [
                 Image.asset(
-                  'lib/assets/images/logon.png', width: 50,
+                  'lib/assets/images/logon.png',
+                  width: 50,
                 ),
-                Spacer(),
-                IconButton(onPressed: () {}, icon: const Icon(Icons.search))
+                const Spacer(),
+                IconButton(onPressed: () {}, icon: const Icon(Icons.search, size: 35,))
               ],
             ),
             Padding(
@@ -27,120 +67,53 @@ class MovieListScreen extends StatelessWidget {
                   OutlinedButton(
                       onPressed: () {},
                       child: const Text('TV Shows',
-                          style: TextStyle(
-                              fontSize: 16, color: Colors.white60))),
+                          style:
+                              TextStyle(fontSize: 16, color: Colors.white60))),
                   OutlinedButton(
                       onPressed: () {},
                       child: const Text('Movies',
-                          style: TextStyle(
-                              fontSize: 16, color: Colors.white60))),
+                          style:
+                              TextStyle(fontSize: 16, color: Colors.white60))),
                   OutlinedButton(
                       onPressed: () {},
                       child: const Text('Categories >',
-                          style: TextStyle(
-                              fontSize: 16, color: Colors.white60)))
+                          style:
+                              TextStyle(fontSize: 16, color: Colors.white60)))
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(15),
-              child: Container(
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.white),
-                    borderRadius: BorderRadius.circular(15)),
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width,
-                height: MediaQuery
-                    .of(context)
-                    .size
-                    .height - 400,
-                margin: const EdgeInsets.only(top: 10),
-                child: Stack(
-                  children: [
-                    Image.asset('lib/assets/images/avatar1.png',
-                        width: MediaQuery
-                            .of(context)
-                            .size
-                            .width,
-                        height: MediaQuery
-                            .of(context)
-                            .size
-                            .height - 400,
-                        fit: BoxFit.fill),
-                    Positioned(
-                        top: MediaQuery
-                            .of(context)
-                            .size
-                            .height - 460,
-                        left: 20,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            SizedBox(
-                              width: 165,
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      shape: const RoundedRectangleBorder(),
-                                      backgroundColor: Colors.white),
-                                  onPressed: () {},
-                                  child: const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.play_arrow_sharp,
-                                        size: 30,
-                                        color: Colors.black,
-                                      ),
-                                      Text(
-                                        'Play',
-                                        style: TextStyle(
-                                            fontSize: 25,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black),
-                                      )
-                                    ],
-                                  )),
-                            ),
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              width: 165,
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      shape: const RoundedRectangleBorder(),
-                                      backgroundColor: Colors.grey.shade900),
-                                  onPressed: () {},
-                                  child: const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.add,
-                                        size: 30,
-                                        color: Colors.white,
-                                      ),
-                                      Text(
-                                        'My List',
-                                        style: TextStyle(
-                                            fontSize: 25,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white),
-                                      )
-                                    ],
-                                  )),
-                            ),
-                          ],
-                        ))
-                  ],
-                ),
-              ),
-            ),
+            _isMovieLoaded
+                ? InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => DetailsPage(
+                              image: nowPlayingMovies[randomIndex].posterPath,
+                              title: nowPlayingMovies[randomIndex].title,
+                              releaseDate:
+                              nowPlayingMovies[randomIndex].releaseDate,
+                              rating: nowPlayingMovies[randomIndex].voteAverage,
+                              overview:
+                              nowPlayingMovies[randomIndex].overview)));
+                },
+                child: MainThumbnail(image: nowPlayingMovies[randomIndex].posterPath))
+                : Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: SkeletonLoad(
+                      width: MediaQuery.of(context).size.width - 25,
+                      height: MediaQuery.of(context).size.height - 350,
+                    ),
+                  ),
             const Row(
               children: [
                 Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text('Popular on Netflix',
-                      style: TextStyle(fontSize: 25, color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -150,21 +123,37 @@ class MovieListScreen extends StatelessWidget {
                   itemBuilder: (BuildContext context, int index) {
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        width: 120,
-                        color: Colors.blue,
-                        child: Text('Box no $index'),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => DetailsPage(
+                                      image: popularMovies[index].posterPath,
+                                      title: popularMovies[index].title,
+                                      releaseDate:
+                                          popularMovies[index].releaseDate,
+                                      rating: popularMovies[index].voteAverage,
+                                      overview:
+                                          popularMovies[index].overview)));
+                        },
+                        child: MovieThumbnail(
+                            image: popularMovies[index].posterPath),
                       ),
                     );
                   },
-                  itemCount: 8,
+                  itemCount: popularMovies.length,
                   scrollDirection: Axis.horizontal),
-            ),const Row(
+            ),
+            const Row(
               children: [
                 Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text('Trending Now',
-                      style: TextStyle(fontSize: 25, color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -173,22 +162,37 @@ class MovieListScreen extends StatelessWidget {
               child: ListView.builder(
                   itemBuilder: (BuildContext context, int index) {
                     return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        width: 120,
-                        color: Colors.purple,
-                        child: Text('Box no $index'),
-                      ),
-                    );
+                        padding: const EdgeInsets.all(8.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => DetailsPage(
+                                        image: trendingMovies[index].posterPath,
+                                        title: trendingMovies[index].title,
+                                        releaseDate:
+                                        trendingMovies[index].releaseDate,
+                                        rating: trendingMovies[index].voteAverage,
+                                        overview:
+                                        trendingMovies[index].overview)));
+                          },
+                          child: MovieThumbnail(
+                              image: trendingMovies[index].posterPath),
+                        ));
                   },
-                  itemCount: 8,
+                  itemCount: trendingMovies.length,
                   scrollDirection: Axis.horizontal),
-            ),const Row(
+            ),
+            const Row(
               children: [
                 Padding(
                   padding: EdgeInsets.all(8.0),
-                  child: Text('TV Comedies',
-                      style: TextStyle(fontSize: 25, color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text('Upcoming Movies',
+                      style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -197,15 +201,26 @@ class MovieListScreen extends StatelessWidget {
               child: ListView.builder(
                   itemBuilder: (BuildContext context, int index) {
                     return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        width: 120,
-                        color: Colors.white38,
-                        child: Text('Box no $index'),
-                      ),
-                    );
+                        padding: const EdgeInsets.all(8.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => DetailsPage(
+                                        image: upcomingMovies[index].posterPath,
+                                        title: upcomingMovies[index].title,
+                                        releaseDate:
+                                        upcomingMovies[index].releaseDate,
+                                        rating: upcomingMovies[index].voteAverage,
+                                        overview:
+                                        upcomingMovies[index].overview)));
+                          },
+                          child: MovieThumbnail(
+                              image: upcomingMovies[index].posterPath),
+                        ));
                   },
-                  itemCount: 8,
+                  itemCount: upcomingMovies.length,
                   scrollDirection: Axis.horizontal),
             ),
           ],
